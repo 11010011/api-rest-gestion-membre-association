@@ -23,3 +23,7 @@
   - Lancer le server
 
         php artisan serve
+
+  - Lancer test
+
+        php artisan test
