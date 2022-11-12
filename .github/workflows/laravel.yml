@@ -1,0 +1,44 @@
+on: [push, pull_request]
+jobs:
+  install_laravel:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:latest
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: false
+          MYSQL_ROOT_PASSWORD: symfony
+          MYSQL_DATABASE: association
+        ports:
+          - 3306/tcp
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+    strategy:
+      fail-fast: true
+      matrix:
+        php-version: ['8.1']
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+
+      - name: Set up php the project
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          extensions: mbstring, mysql, xml, ctype, intl, iconv, filter, gd, json, pdo
+
+      - name: install packages
+        run: composer install --no-progress --no-suggest --prefer-dist
+
+      - name: Configure key
+        run: composer key:generate
+
+      - name: Config db
+        run: php bin/console d:s:u --force
+        env:
+          DATABASE_URL: mysql://root:symfony@127.0.0.1:${{ job.services.mysql.ports['3306'] }}/the_platform
+
+      - name: testing
+        run: |
+          echo ========== testing =========
+          php artisan test
