@@ -29,6 +29,12 @@ jobs:
 
       - name: install packages
         run: composer install --no-progress --no-suggest --prefer-dist
+      
+      - name: create .env
+        run: mv .env.example .env
+
+      - name: generate key
+        run: php artisan key:generate
 
       - name: testing
         run: |
